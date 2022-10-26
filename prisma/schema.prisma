@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator zod {
+  provider                 = "zod-prisma"
+  output                   = "./zod" // (default) the directory where generated zod schemas will be saved
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   Int                   @id @default(autoincrement())
+  email                String                @unique
+  name                 String?
+  password             String
+  posts                Post[]
+  personalAccessTokens PersonalAccessToken[]
+  roles           UsersRoles[]
+  permissions     UsersPermissions[]
+}
+
+model Post {
+  id       Int     @id @default(autoincrement())
+  title    String
+  content  String?
+  author   User?   @relation(fields: [authorId], references: [id])
+  authorId Int?
+}
+
+model PersonalAccessToken {
+  id           Int       @id @default(autoincrement())
+  refreshToken String
+  expiredDate  DateTime?
+  user         User      @relation(fields: [userId], references: [id], map: "personal_access_token_user_fk")
+  userId       Int
+}
+
+model Role {
+  id               Int                @id @default(autoincrement())
+  name             String
+  slug             String
+  users       UsersRoles[]
+  permissions RolesPermissions[]
+}
+
+model Permission {
+  id               Int                @id @default(autoincrement())
+  name             String
+  slug             String
+  users UsersPermissions[]
+  roles RolesPermissions[]
+}
+
+model UsersRoles {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  role   Role @relation(fields: [roleId], references: [id])
+  roleId Int
+
+  @@id([userId, roleId])
+}
+
+model UsersPermissions {
+  user         User       @relation(fields: [userId], references: [id])
+  userId       Int
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  permissionId Int
+
+  @@id([userId, permissionId])
+}
+
+model RolesPermissions {
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleId       Int
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  permissionId Int
+
+  @@id([roleId, permissionId])
+}
