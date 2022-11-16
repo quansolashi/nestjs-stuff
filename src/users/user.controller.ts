@@ -7,6 +7,8 @@ import { ZodGuard } from 'src/common/request/guard';
 import { CreateUserRequest } from 'src/common/request/user/create-user.request';
 import * as bcrypt from 'bcrypt';
 import { UserService } from './user.service';
+import { query } from 'express';
+import { standardizedQueries } from 'src/common/utils/filter/query';
 
 @Controller('users')
 export default class UserController {
@@ -16,10 +18,10 @@ export default class UserController {
   @UseGuards(RolesGuard)
   @Get()
   async users(
-    @Query('page') page: string,
-    @Query('perPage') perPage: string,
+    @Query() params: any
   ): Promise<IPaginationResult<User>> {
-    return this.userService.users({ page, perPage });
+    const { page, perPage, ...query } = params
+    return this.userService.users({ query, paginationOptions: {page, perPage} });
   }
 
   @UseGuards(new ZodGuard(CreateUserRequest, 'body'))
@@ -37,6 +39,5 @@ export default class UserController {
     } catch (error) {
       throw error;
     }
-    return userInput as User;
   }
 }

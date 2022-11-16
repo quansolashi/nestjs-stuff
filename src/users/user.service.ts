@@ -3,18 +3,19 @@ import { Prisma, User } from '@prisma/client';
 import { IPaginationResult } from 'src/common/pagination/offset/interfaces';
 import { createPaginator } from 'src/common/pagination/offset/pagination';
 import { PaginationOptions } from 'src/common/pagination/offset/types';
+import { standardizedQueries } from 'src/common/utils/filter/query';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async users(query?: PaginationOptions): Promise<IPaginationResult<User>> {
+  async users(input?: { query: any, paginationOptions: PaginationOptions }): Promise<IPaginationResult<User>> {
     const paginate = createPaginator({ perPage: 20 });
     const users = await paginate<User, Prisma.UserFindUniqueArgs>(
       this.prisma.user,
-      undefined,
-      query,
+      standardizedQueries(input.query) as Prisma.UserFindUniqueArgs,
+      input.paginationOptions,
     );
 
     return users;
